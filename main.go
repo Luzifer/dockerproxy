@@ -63,6 +63,17 @@ func unpack(s []string, vars ...*string) {
 	}
 }
 
+func normalizeRemoteAddr(remote_addr string) string {
+	idx := strings.LastIndex(remote_addr, ":")
+	if idx != -1 {
+		remote_addr = remote_addr[0:idx]
+		if remote_addr[0] == '[' && remote_addr[len(remote_addr)-1] == ']' {
+			remote_addr = remote_addr[1 : len(remote_addr)-1]
+		}
+	}
+	return remote_addr
+}
+
 func main() {
 	var configFile = flag.String("configfile", "./config.json", "Location of the configuration file")
 	flag.Parse()
@@ -96,6 +107,7 @@ func main() {
 		if target, ok := containers[slug]; ok && slug != "" {
 			req.URL.Scheme = "http"
 			req.URL.Host = target[rand.Intn(len(target))]
+			req.Header.Add("X-Forwarded-For", normalizeRemoteAddr(req.RemoteAddr))
 
 			proxy.ServeHTTP(w, req)
 		} else {
