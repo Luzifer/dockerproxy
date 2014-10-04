@@ -1,0 +1,23 @@
+{
+  "domains": {
+    "host1.example.com": {
+      "ssl": {
+        "cert": "ssl/host1.example.com.crt",
+        "key": "ssl/host1.example.com.key"
+      },
+      "slug": "container1"
+    },
+    "host2.example.com": {
+      "slug": "container2"
+    }
+  },
+  "generic": ".dockersrv.example.com",
+  "listenHTTP": ":8081",
+  "listenHTTPS": ":4443",
+  "docker": {
+    "hosts": {
+      "localhost": "docker01.servers.example.com"
+    },
+    "port": 9999
+  }
+}
