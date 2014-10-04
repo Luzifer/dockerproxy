@@ -1,3 +1,6 @@
+// Code by Paul van Brouwershaven
+// https://groups.google.com/d/msg/golang-nuts/rUm2iYTdrU4/PaEBya4dzvoJ
+
 package sni
 
 import (
