@@ -23,7 +23,7 @@ The configuration is written in JSON format and read every minute by the daemon:
   - `slug`: The slug defined in the Docker container to determine which container should handle the request
   - `force_ssl`: The proxy does not forward request but return a redirect to SSL based connection
   - `ssl` (optional): SSL configuration for that domain
-    - `cert`: x509 certificate file
+    - `cert`: x509 certificate file (Intermediate certificates belongs in this file too. Put them under your own certificate.)
     - `key`: The key for the cerficate without password protection
 - `generic`: A generic suffix on which the proxy will forward to every configured container
 - `listenHTTP`: An address binding for HTTP traffic like `:80`
