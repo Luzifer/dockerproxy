@@ -70,6 +70,8 @@ func main() {
 	cfg := loadConfig(configFile)
 	containers := collectDockerContainer(&cfg)
 
+	proxy.OnRequest().HandleConnect(goproxy.AlwaysReject)
+
 	// We are not really a proxy but act as a HTTP(s) server who delivers remote pages
 	proxy.NonproxyHandler = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		slug := ""
@@ -89,7 +91,7 @@ func main() {
 			slug = strings.Replace(req.Host, cfg.Generic, "", -1)
 		}
 		// We found a valid slug before?
-		if target, ok := containers[slug]; ok {
+		if target, ok := containers[slug]; ok && slug != "" {
 			req.URL.Scheme = "http"
 			req.URL.Host = target
 
