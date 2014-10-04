@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -15,8 +16,8 @@ import (
 	"gopkg.in/elazarl/goproxy.v1"
 )
 
-func loadConfig() config {
-	file, e := ioutil.ReadFile("./config.json")
+func loadConfig(configFile *string) config {
+	file, e := ioutil.ReadFile(*configFile)
 	if e != nil {
 		fmt.Printf("File error: %v\n", e)
 		os.Exit(1)
@@ -62,8 +63,11 @@ func unpack(s []string, vars ...*string) {
 }
 
 func main() {
+	var configFile = flag.String("configfile", "./config.json", "Location of the configuration file")
+	flag.Parse()
+
 	proxy := goproxy.NewProxyHttpServer()
-	cfg := loadConfig()
+	cfg := loadConfig(configFile)
 	containers := collectDockerContainer(&cfg)
 
 	// We are not really a proxy but act as a HTTP(s) server who delivers remote pages
@@ -122,7 +126,7 @@ func main() {
 		case httpsErr := <-httpsChan:
 			log.Fatal(httpsErr)
 		case <-loaderChan:
-			cfg = loadConfig()
+			cfg = loadConfig(configFile)
 			containers = collectDockerContainer(&cfg)
 		}
 	}
