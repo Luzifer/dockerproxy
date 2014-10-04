@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"strings"
@@ -32,8 +33,8 @@ func loadConfig(configFile *string) config {
 	return cfg
 }
 
-func collectDockerContainer(cfg *config) map[string]string {
-	result := make(map[string]string)
+func collectDockerContainer(cfg *config) map[string][]string {
+	result := make(map[string][]string)
 	for dockerHostPrivate, dockerHost := range cfg.Docker.Hosts {
 		endpoint := fmt.Sprintf("tcp://%s:%d", dockerHostPrivate, cfg.Docker.Port)
 		client, _ := docker.NewClient(endpoint)
@@ -48,7 +49,7 @@ func collectDockerContainer(cfg *config) map[string]string {
 			}
 			if slug, ok := currentEnv["ROUTER_SLUG"]; ok {
 				port := currentEnv["ROUTER_PORT"]
-				result[slug] = fmt.Sprintf("%s:%s", dockerHost, port)
+				result[slug] = append(result[slug], fmt.Sprintf("%s:%s", dockerHost, port))
 			}
 		}
 	}
@@ -69,6 +70,7 @@ func main() {
 	proxy := goproxy.NewProxyHttpServer()
 	cfg := loadConfig(configFile)
 	containers := collectDockerContainer(&cfg)
+	rand.Seed(time.Now().UnixNano())
 
 	proxy.OnRequest().HandleConnect(goproxy.AlwaysReject)
 
@@ -93,7 +95,7 @@ func main() {
 		// We found a valid slug before?
 		if target, ok := containers[slug]; ok && slug != "" {
 			req.URL.Scheme = "http"
-			req.URL.Host = target
+			req.URL.Host = target[rand.Intn(len(target))]
 
 			proxy.ServeHTTP(w, req)
 		} else {
