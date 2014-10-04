@@ -29,6 +29,18 @@ EXPOSE 443
 CMD ["/go/bin/dockerproxy", "-configfile=/etc/dockerproxy/config.json"]
 ```
 
+As an alternative you can use a docker container who has a mountpoint for the configuration and reads it from the host:
+
+```
+FROM luzifer/dockerproxy
+
+VOLUME ["/etc/dockerproxy"]
+
+EXPOSE 80
+EXPOSE 443
+CMD ["/go/bin/dockerproxy", "-configfile=/etc/dockerproxy/config.json"]
+```
+
 Then, execute the following to build the image:
 
 ```
@@ -41,6 +53,12 @@ To launch it, just type:
 
 ```
 docker run -d -p 80 -p 443 myuser/dockerproxy
+```
+
+If you used the option to have a mount point you have to mount the configuration:
+
+```
+docker run -d -p 80 -p 443 -v /home/myuser/config:/etc/dockerproxy myuser/dockerproxy
 ```
 
 Easy!

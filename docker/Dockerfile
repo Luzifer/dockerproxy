@@ -6,6 +6,3 @@ RUN go get github.com/Luzifer/dockerproxy
 RUN go install github.com/Luzifer/dockerproxy
 
 ENTRYPOINT /go/bin/dockerproxy
-
-EXPOSE 80
-EXPOSE 443
