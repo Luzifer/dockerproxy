@@ -21,6 +21,7 @@ The configuration is written in JSON format and read every minute by the daemon:
 
 - `domains`: Dict of domain configurations the proxy is able to respond to
   - `slug`: The slug defined in the Docker container to determine which container should handle the request
+  - `force_ssl`: The proxy does not forward request but return a redirect to SSL based connection
   - `ssl` (optional): SSL configuration for that domain
     - `cert`: x509 certificate file
     - `key`: The key for the cerficate without password protection
@@ -41,7 +42,8 @@ Example configuration:
         "cert": "ssl/host1.example.com.crt",
         "key": "ssl/host1.example.com.key"
       },
-      "slug": "container1"
+      "slug": "container1",
+      "force_ssl": true
     },
     "host2.example.com": {
       "slug": "container2"

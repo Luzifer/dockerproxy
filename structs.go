@@ -9,8 +9,9 @@ type config struct {
 }
 
 type domainConfig struct {
-	SSL  sslConfig `json:"ssl,omitempty"`
-	Slug string    `json:"slug"`
+	SSL      sslConfig `json:"ssl,omitempty"`
+	Slug     string    `json:"slug"`
+	ForceSSL bool      `json:"force_ssl"`
 }
 
 type sslConfig struct {

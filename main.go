@@ -76,6 +76,13 @@ func main() {
 		// Host is defined and slug has been found
 		if host, ok := cfg.Domains[req.Host]; ok {
 			slug = host.Slug
+
+			if host.ForceSSL && req.TLS == nil {
+				req.URL.Scheme = "https"
+				req.URL.Host = req.Host
+				http.Redirect(w, req, req.URL.String(), 301)
+				return
+			}
 		}
 		// Host is a generic host
 		if strings.HasSuffix(req.Host, cfg.Generic) {

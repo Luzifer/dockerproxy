@@ -5,7 +5,8 @@
         "cert": "ssl/host1.example.com.crt",
         "key": "ssl/host1.example.com.key"
       },
-      "slug": "container1"
+      "slug": "container1",
+      "force_ssl": true
     },
     "host2.example.com": {
       "slug": "container2"
