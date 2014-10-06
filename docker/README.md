@@ -10,7 +10,7 @@ This repository contains **Dockerfile** of [Luzifer/dockerproxy](https://github.
 
 1. Install [Docker](https://www.docker.com/).
 
-2. Download [automated build](https://registry.hub.docker.com/u/luzifer/dockerproxy/) from public [Docker Hub Registry](https://registry.hub.docker.com/): `docker pull luzifer/php5-nginx`
+2. Download [automated build](https://registry.hub.docker.com/u/luzifer/dockerproxy/) from public [Docker Hub Registry](https://registry.hub.docker.com/): `docker pull luzifer/dockerproxy`
 
 ## Usage
 
