@@ -52,13 +52,13 @@ This will create an image named `myuser/dockerproxy` with your configuration rea
 To launch it, just type:
 
 ```
-docker run -d -p 80 -p 443 myuser/dockerproxy
+docker run -d -p 80:80 -p 443:443 myuser/dockerproxy
 ```
 
 If you used the option to have a mount point you have to mount the configuration:
 
 ```
-docker run -d -p 80 -p 443 -v /home/myuser/config:/etc/dockerproxy myuser/dockerproxy
+docker run -d -p 80:80 -p 443:443 -v /home/myuser/config:/etc/dockerproxy myuser/dockerproxy
 ```
 
 Easy!
