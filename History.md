@@ -1,4 +1,11 @@
 
+1.4.0 / 2014-10-16
+==================
+
+  * Added basic HTTP logging
+  * Fixed bug in port export in docker readme
+  * Fixed copy and paste bug in readme
+
 1.3.0 / 2014-10-05
 ==================
 
