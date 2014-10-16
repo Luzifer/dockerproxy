@@ -74,6 +74,13 @@ func normalizeRemoteAddr(remote_addr string) string {
 	return remote_addr
 }
 
+func httpLog(handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("%s %s %s %s", normalizeRemoteAddr(r.RemoteAddr), r.Method, r.Host, r.URL)
+		handler.ServeHTTP(w, r)
+	})
+}
+
 func main() {
 	var configFile = flag.String("configfile", "./config.json", "Location of the configuration file")
 	flag.Parse()
@@ -130,12 +137,12 @@ func main() {
 	loaderChan := time.NewTicker(time.Minute).C
 
 	go func(proxy *goproxy.ProxyHttpServer) {
-		httpChan <- http.ListenAndServe(cfg.ListenHTTP, proxy)
+		httpChan <- http.ListenAndServe(cfg.ListenHTTP, httpLog(proxy))
 	}(proxy)
 
 	go func(*goproxy.ProxyHttpServer) {
 		httpsServer := &http.Server{
-			Handler: proxy,
+			Handler: httpLog(proxy),
 			Addr:    cfg.ListenHTTPS,
 		}
 
