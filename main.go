@@ -17,6 +17,9 @@ import (
 	"gopkg.in/elazarl/goproxy.v1"
 )
 
+var cfg config
+var containers map[string][]string
+
 func loadConfig(configFile *string) config {
 	file, e := ioutil.ReadFile(*configFile)
 	if e != nil {
@@ -81,19 +84,8 @@ func httpLog(handler http.Handler) http.Handler {
 	})
 }
 
-func main() {
-	var configFile = flag.String("configfile", "./config.json", "Location of the configuration file")
-	flag.Parse()
-
-	proxy := goproxy.NewProxyHttpServer()
-	cfg := loadConfig(configFile)
-	containers := collectDockerContainer(&cfg)
-	rand.Seed(time.Now().UnixNano())
-
-	proxy.OnRequest().HandleConnect(goproxy.AlwaysReject)
-
-	// We are not really a proxy but act as a HTTP(s) server who delivers remote pages
-	proxy.NonproxyHandler = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+func shieldOwnHosts(handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		slug := ""
 		// Host is defined and slug has been found
 		if host, ok := cfg.Domains[req.Host]; ok {
@@ -116,10 +108,27 @@ func main() {
 			req.URL.Host = target[rand.Intn(len(target))]
 			req.Header.Add("X-Forwarded-For", normalizeRemoteAddr(req.RemoteAddr))
 
-			proxy.ServeHTTP(w, req)
+			handler.ServeHTTP(w, req)
 		} else {
 			http.Error(w, "This host is currently not available", 502)
 		}
+	})
+}
+
+func main() {
+	var configFile = flag.String("configfile", "./config.json", "Location of the configuration file")
+	flag.Parse()
+
+	proxy := goproxy.NewProxyHttpServer()
+	cfg = loadConfig(configFile)
+	containers = collectDockerContainer(&cfg)
+	rand.Seed(time.Now().UnixNano())
+
+	proxy.OnRequest().HandleConnect(goproxy.AlwaysReject)
+
+	// We are not really a proxy but act as a HTTP(s) server who delivers remote pages
+	proxy.NonproxyHandler = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		proxy.ServeHTTP(w, req)
 	})
 
 	var certs []sni.Certificates
@@ -137,12 +146,12 @@ func main() {
 	loaderChan := time.NewTicker(time.Minute).C
 
 	go func(proxy *goproxy.ProxyHttpServer) {
-		httpChan <- http.ListenAndServe(cfg.ListenHTTP, httpLog(proxy))
+		httpChan <- http.ListenAndServe(cfg.ListenHTTP, shieldOwnHosts(httpLog(proxy)))
 	}(proxy)
 
 	go func(*goproxy.ProxyHttpServer) {
 		httpsServer := &http.Server{
-			Handler: httpLog(proxy),
+			Handler: shieldOwnHosts(httpLog(proxy)),
 			Addr:    cfg.ListenHTTPS,
 		}
 
