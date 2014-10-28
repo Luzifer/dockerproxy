@@ -1,4 +1,9 @@
 
+1.4.1 / 2014-10-28
+==================
+
+  * Critical Fix: Removed securiy hole which could be used to attack various sites using post requests
+
 1.4.0 / 2014-10-16
 ==================
 
