@@ -47,6 +47,9 @@ func ListenAndServeTLSSNI(srv *http.Server, certs []Certificates) error {
 		return err
 	}
 
+	// Force clients to use TLS1.0 as SSL is buggy as hell
+	config.MinVersion = tls.VersionTLS10
+
 	tlsListener := tls.NewListener(conn, config)
 	return srv.Serve(tlsListener)
 }
