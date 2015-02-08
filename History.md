@@ -1,4 +1,10 @@
 
+1.5.0 / 2015-02-08
+==================
+
+  * Force secure connections to use TLS to prevent SSL attacks
+  * Made docker container usable without building an own container
+
 1.4.1 / 2014-10-28
 ==================
 
