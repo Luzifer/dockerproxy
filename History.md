@@ -1,4 +1,10 @@
 
+1.6.0 / 2015-05-16
+==================
+
+  * Changed example config to yaml format
+  * Refactored code; added yaml support for config
+
 1.5.0 / 2015-02-08
 ==================
 
