@@ -64,3 +64,15 @@ docker:
   port: 9999
 ```
 
+### Authentication provider config
+
+- `basic-auth`:
+  - Map of usernames / passwords
+
+  ```yaml
+  authentication:
+    type: basic-auth
+    config:
+      alice: cat
+      bob: password
+  ```
