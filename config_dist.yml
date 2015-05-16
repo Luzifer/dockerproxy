@@ -1,0 +1,19 @@
+---
+generic: .dockersrv.example.com
+listenHTTP: ":8081"
+listenHTTPS: ":4443"
+
+domains:
+  host1.example.com:
+    slug: container1
+    force_ssl: true
+    ssl:
+      cert: ssl/host1.example.com.crt
+      key: ssl/host1.example.com.key
+  host2.example.com
+    slug: container2
+
+docker:
+  hosts:
+    localhost: docker01.servers.example.com
+  port: 9999

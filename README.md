@@ -17,7 +17,7 @@ Currently Docker does not support container tagging so this proxy is using the e
 
 ### dockerproxy
 
-The configuration is written in JSON format and read every minute by the daemon:
+The configuration is written in YAML (or JSON) format and read every minute by the daemon:
 
 - `domains`: Dict of domain configurations the proxy is able to respond to
   - `slug`: The slug defined in the Docker container to determine which container should handle the request
@@ -34,30 +34,25 @@ The configuration is written in JSON format and read every minute by the daemon:
 
 Example configuration:
 
-```
-{
-  "domains": {
-    "host1.example.com": {
-      "ssl": {
-        "cert": "ssl/host1.example.com.crt",
-        "key": "ssl/host1.example.com.key"
-      },
-      "slug": "container1",
-      "force_ssl": true
-    },
-    "host2.example.com": {
-      "slug": "container2"
-    }
-  },
-  "generic": ".dockersrv.example.com",
-  "listenHTTP": ":8081",
-  "listenHTTPS": ":4443",
-  "docker": {
-    "hosts": {
-      "localhost": "docker01.servers.example.com"
-    },
-    "port": 9999
-  }
-}
+```yaml
+---
+generic: .dockersrv.example.com
+listenHTTP: ":8081"
+listenHTTPS: ":4443"
+
+domains:
+  host1.example.com:
+    slug: container1
+    force_ssl: true
+    ssl:
+      cert: ssl/host1.example.com.crt
+      key: ssl/host1.example.com.key
+  host2.example.com
+    slug: container2
+
+docker:
+  hosts:
+    localhost: docker01.servers.example.com
+  port: 9999
 ```
 
