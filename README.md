@@ -25,6 +25,9 @@ The configuration is written in YAML (or JSON) format and read every minute by t
   - `ssl` (optional): SSL configuration for that domain
     - `cert`: x509 certificate file (Intermediate certificates belongs in this file too. Put them under your own certificate.)
     - `key`: The key for the cerficate without password protection
+  - `authentication`: Configure authentication for this domain
+    - `type`: The authentication mechanism to use (Available: `basic-auth`)
+    - `config`: Authentication specific configuration
 - `generic`: A generic suffix on which the proxy will forward to every configured container
 - `listenHTTP`: An address binding for HTTP traffic like `:80`
 - `listenHTTPS`: An address binding for HTTPs traffic like `:443`
@@ -49,6 +52,11 @@ domains:
       key: ssl/host1.example.com.key
   host2.example.com:
     slug: container2
+    authentication:
+      type: basic-auth
+      config:
+        alice: cat
+        bob: password
 
 docker:
   hosts:

@@ -9,6 +9,9 @@ import (
 
 	"github.com/Luzifer/dockerproxy/sni"
 	"github.com/elazarl/goproxy"
+
+	"github.com/Luzifer/dockerproxy/auth"
+	_ "github.com/Luzifer/dockerproxy/auth/basic"
 )
 
 type DockerProxy struct {
@@ -78,6 +81,27 @@ func (d *DockerProxy) shieldOwnHosts(handler http.Handler) http.Handler {
 				req.URL.Host = req.Host
 				http.Redirect(w, req, req.URL.String(), 301)
 				return
+			}
+
+			if proxyConfiguration.Domains[req.Host].Authentication.Type != "" {
+				authHandler, err := auth.GetAuthHandler(proxyConfiguration.Domains[req.Host].Authentication.Type)
+				if err != nil {
+					http.Error(w, "Authentication system is misconfigured for this host.", http.StatusInternalServerError)
+					log.Printf("AuthSystemError: %s\n", err)
+					return
+				}
+
+				ok, err := authHandler(proxyConfiguration.Domains[req.Host].Authentication.Config, w, req)
+				if err != nil {
+					http.Error(w, "Authentication system threw an error.", http.StatusInternalServerError)
+					log.Printf("AuthSystemError: %s\n", err)
+					return
+				}
+
+				if !ok {
+					http.Error(w, "Unauthorized.", http.StatusUnauthorized)
+					return
+				}
 			}
 		}
 		// Host is a generic host
