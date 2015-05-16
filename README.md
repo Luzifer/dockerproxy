@@ -47,7 +47,7 @@ domains:
     ssl:
       cert: ssl/host1.example.com.crt
       key: ssl/host1.example.com.key
-  host2.example.com
+  host2.example.com:
     slug: container2
 
 docker:
