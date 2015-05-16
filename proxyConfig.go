@@ -17,9 +17,15 @@ type proxyConfig struct {
 }
 
 type domainConfig struct {
-	SSL      sslConfig `json:"ssl,omitempty" yaml:"ssl,omitempty"`
-	Slug     string    `json:"slug" yaml:"slug"`
-	ForceSSL bool      `json:"force_ssl" yaml:"force_ssl"`
+	SSL            sslConfig  `json:"ssl,omitempty" yaml:"ssl,omitempty"`
+	Slug           string     `json:"slug" yaml:"slug"`
+	ForceSSL       bool       `json:"force_ssl" yaml:"force_ssl"`
+	Authentication domainAuth `json:"authentication,omitempty" yaml:"authentication,omitempty"`
+}
+
+type domainAuth struct {
+	Type   string      `json:"type" yaml:"type"`
+	Config interface{} `json:"config" yaml:"config"`
 }
 
 type sslConfig struct {

@@ -12,6 +12,11 @@ domains:
       key: ssl/host1.example.com.key
   host2.example.com:
     slug: container2
+    authentication:
+      type: basic-auth
+      config:
+        alice: cat
+        bob: password
 
 docker:
   hosts:
