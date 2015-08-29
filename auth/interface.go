@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"gopkg.in/yaml.v1"
+	"gopkg.in/yaml.v2"
 )
 
 type AuthFunction func(interface{}, http.ResponseWriter, *http.Request) (bool, error)

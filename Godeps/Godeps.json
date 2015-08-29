@@ -1,0 +1,20 @@
+{
+	"ImportPath": "github.com/Luzifer/dockerproxy",
+	"GoVersion": "go1.5",
+	"Deps": [
+		{
+			"ImportPath": "github.com/elazarl/goproxy",
+			"Comment": "v1.0-63-gaedaad7",
+			"Rev": "aedaad751e7676772297daf9ddb3b3234cee0e0d"
+		},
+		{
+			"ImportPath": "github.com/fsouza/go-dockerclient",
+			"Comment": "0.2.1-667-gc0187cb",
+			"Rev": "c0187cbf588c59709e8881fd2bba082b02231356"
+		},
+		{
+			"ImportPath": "gopkg.in/yaml.v2",
+			"Rev": "7ad95dd0798a40da1ccdff6dff35fd177b5edf40"
+		}
+	]
+}
