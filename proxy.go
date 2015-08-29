@@ -18,9 +18,29 @@ type DockerProxy struct {
 	proxy *goproxy.ProxyHttpServer
 }
 
+type RedirectRewriter struct{}
+
+func (r RedirectRewriter) HandleResp(resp *http.Response, ctx *goproxy.ProxyCtx) bool {
+	if resp == nil {
+		return false
+	}
+	_, ok := resp.Header["Location"]
+	return ok
+}
+func RedirectRewriterRewrite(resp *http.Response, ctx *goproxy.ProxyCtx) *http.Response {
+	loc, _ := resp.Location()
+	if host, ok := proxyConfiguration.Domains[loc.Host]; ok && host.ForceSSL && loc.Scheme == "http" {
+		loc.Scheme = "https"
+		resp.Header.Set("Location", loc.String())
+	}
+	return resp
+}
+
 func NewDockerProxy() *DockerProxy {
 	proxy := goproxy.NewProxyHttpServer()
 	proxy.OnRequest().HandleConnect(goproxy.AlwaysReject)
+
+	proxy.OnResponse(RedirectRewriter{}).DoFunc(RedirectRewriterRewrite)
 
 	// We are not really a proxy but act as a HTTP(s) server who delivers remote pages
 	proxy.NonproxyHandler = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
