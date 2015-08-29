@@ -11,15 +11,15 @@ import (
 )
 
 var (
-	containers         *DockerContainers
-	cfg                *Config
+	containers         *dockerContainers
+	cfg                *config
 	proxyConfiguration *proxyConfig
 )
 
 func init() {
 	var err error
 
-	cfg = NewConfig()
+	cfg = newConfig()
 
 	proxyConfiguration, err = newProxyConfig(cfg.ConfigFile)
 	if err != nil {
@@ -30,22 +30,22 @@ func init() {
 
 func main() {
 	containers = collectDockerContainer()
-	proxy := NewDockerProxy()
+	proxy := newDockerProxy()
 
 	serverErrorChan := make(chan error, 2)
 	loaderChan := time.NewTicker(time.Minute)
 
-	go func(proxy *DockerProxy) {
+	go func(proxy *dockerProxy) {
 		serverErrorChan <- http.ListenAndServe(proxyConfiguration.ListenHTTP, proxy)
 	}(proxy)
 
-	go func(proxy *DockerProxy) {
+	go func(proxy *dockerProxy) {
 		httpsServer := &http.Server{
 			Handler: proxy,
 			Addr:    proxyConfiguration.ListenHTTPS,
 		}
 
-		serverErrorChan <- sni.ListenAndServeTLSSNI(httpsServer, proxy.GetCertificates())
+		serverErrorChan <- sni.ListenAndServeTLSSNI(httpsServer, proxy.getCertificates())
 	}(proxy)
 
 	for {

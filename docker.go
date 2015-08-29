@@ -7,10 +7,10 @@ import (
 	"github.com/fsouza/go-dockerclient"
 )
 
-type DockerContainers map[string][]string
+type dockerContainers map[string][]string
 
-func collectDockerContainer() *DockerContainers {
-	result := make(DockerContainers)
+func collectDockerContainer() *dockerContainers {
+	result := make(dockerContainers)
 
 	for dockerHostPrivate, dockerHost := range proxyConfiguration.Docker.Hosts {
 		// Connect every docker host and get its containers

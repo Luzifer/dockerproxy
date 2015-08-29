@@ -14,20 +14,20 @@ import (
 	_ "github.com/Luzifer/dockerproxy/auth/basic"
 )
 
-type DockerProxy struct {
+type dockerProxy struct {
 	proxy *goproxy.ProxyHttpServer
 }
 
-type RedirectRewriter struct{}
+type redirectRewriter struct{}
 
-func (r RedirectRewriter) HandleResp(resp *http.Response, ctx *goproxy.ProxyCtx) bool {
+func (r redirectRewriter) HandleResp(resp *http.Response, ctx *goproxy.ProxyCtx) bool {
 	if resp == nil {
 		return false
 	}
 	_, ok := resp.Header["Location"]
 	return ok
 }
-func RedirectRewriterRewrite(resp *http.Response, ctx *goproxy.ProxyCtx) *http.Response {
+func redirectRewriterRewrite(resp *http.Response, ctx *goproxy.ProxyCtx) *http.Response {
 	loc, _ := resp.Location()
 	if host, ok := proxyConfiguration.Domains[loc.Host]; ok && host.ForceSSL && loc.Scheme == "http" {
 		loc.Scheme = "https"
@@ -36,11 +36,11 @@ func RedirectRewriterRewrite(resp *http.Response, ctx *goproxy.ProxyCtx) *http.R
 	return resp
 }
 
-func NewDockerProxy() *DockerProxy {
+func newDockerProxy() *dockerProxy {
 	proxy := goproxy.NewProxyHttpServer()
 	proxy.OnRequest().HandleConnect(goproxy.AlwaysReject)
 
-	proxy.OnResponse(RedirectRewriter{}).DoFunc(RedirectRewriterRewrite)
+	proxy.OnResponse(redirectRewriter{}).DoFunc(redirectRewriterRewrite)
 
 	// We are not really a proxy but act as a HTTP(s) server who delivers remote pages
 	proxy.NonproxyHandler = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
@@ -49,16 +49,16 @@ func NewDockerProxy() *DockerProxy {
 
 	rand.Seed(time.Now().UnixNano())
 
-	return &DockerProxy{
+	return &dockerProxy{
 		proxy: proxy,
 	}
 }
 
-func (d *DockerProxy) ServeHTTP(res http.ResponseWriter, r *http.Request) {
+func (d *dockerProxy) ServeHTTP(res http.ResponseWriter, r *http.Request) {
 	d.shieldOwnHosts(d.httpLog(d.proxy)).ServeHTTP(res, r)
 }
 
-func (d *DockerProxy) GetCertificates() []sni.Certificates {
+func (d *dockerProxy) getCertificates() []sni.Certificates {
 	var certs []sni.Certificates
 	for _, domain := range proxyConfiguration.Domains {
 		if domain.SSL.Cert != "" {
@@ -71,25 +71,25 @@ func (d *DockerProxy) GetCertificates() []sni.Certificates {
 	return certs
 }
 
-func (d *DockerProxy) normalizeRemoteAddr(remote_addr string) string {
-	idx := strings.LastIndex(remote_addr, ":")
+func (d *dockerProxy) normalizeRemoteAddr(remoteAddress string) string {
+	idx := strings.LastIndex(remoteAddress, ":")
 	if idx != -1 {
-		remote_addr = remote_addr[0:idx]
-		if remote_addr[0] == '[' && remote_addr[len(remote_addr)-1] == ']' {
-			remote_addr = remote_addr[1 : len(remote_addr)-1]
+		remoteAddress = remoteAddress[0:idx]
+		if remoteAddress[0] == '[' && remoteAddress[len(remoteAddress)-1] == ']' {
+			remoteAddress = remoteAddress[1 : len(remoteAddress)-1]
 		}
 	}
-	return remote_addr
+	return remoteAddress
 }
 
-func (d *DockerProxy) httpLog(handler http.Handler) http.Handler {
+func (d *dockerProxy) httpLog(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("%s %s %s %s", d.normalizeRemoteAddr(r.RemoteAddr), r.Method, r.Host, r.URL)
 		handler.ServeHTTP(w, r)
 	})
 }
 
-func (d *DockerProxy) shieldOwnHosts(handler http.Handler) http.Handler {
+func (d *dockerProxy) shieldOwnHosts(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		slug := ""
 		// Host is defined and slug has been found
