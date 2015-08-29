@@ -1,4 +1,10 @@
 
+1.8.0 / 2015-08-29
+==================
+
+  * Fixed some linter errors
+  * Rewrite redirects without HTTPs if SSL is enforced
+
 1.7.1 / 2015-08-29
 ==================
 
