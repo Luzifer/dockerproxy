@@ -1,4 +1,10 @@
 
+1.7.1 / 2015-08-29
+==================
+
+  * Vendored deps
+  * Documented authentication provider
+
 1.7.0 / 2015-05-17
 ==================
 
