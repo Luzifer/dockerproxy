@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Luzifer/dockerproxy/sni"
+	"github.com/Luzifer/rconfig"
 )
 
 var (
@@ -19,12 +20,20 @@ var (
 func init() {
 	var err error
 
-	cfg = newConfig()
+	cfg = struct {
+		ConfigFile string `flag:"configfile" default:"./config.json" description:"Location of the configuration file"`
+	}{}
 
 	proxyConfiguration, err = newProxyConfig(cfg.ConfigFile)
 	if err != nil {
 		fmt.Printf("%v\n", err)
 		os.Exit(1)
+	}
+}
+
+func init() {
+	if err := rconfig.Parse(&cfg); err != nil {
+		log.Fatalf("Unable to parse commandline flags: %s", err)
 	}
 }
 
