@@ -48,7 +48,6 @@ func main() {
 	loaderChan := time.NewTicker(time.Minute)
 
 	letsEncryptHandler := http.HandlerFunc(func(res http.ResponseWriter, r *http.Request) {
-		log.Printf("DBG: %s - %s", r.Host, r.URL.RequestURI())
 		if challenge, ok := letsEncryptChallenges[r.Host]; ok {
 			if r.URL.RequestURI() == challenge.Path {
 				io.WriteString(res, challenge.Response)
@@ -63,25 +62,25 @@ func main() {
 		serverErrorChan <- http.ListenAndServe(proxyConfiguration.ListenHTTP, h)
 	}(letsEncryptHandler)
 
-	// Evil hack: remove!
-	time.Sleep(2 * time.Second)
-
+	// Collect certificates from disk
 	certificates := proxy.getCertificates()
 
+	// Get a certificate for all LetsEncrypt enabled domains
+	leDomains := []string{}
 	for domain, domainCFG := range proxyConfiguration.Domains {
 		if domainCFG.UseLetsEncrypt {
-			cert, key, err := requestLetsEncryptCertificate(domain)
-			if err != nil {
-				log.Printf("ERROR: Unable to get certificate for domain '%s': %s", domain, err)
-				continue
-			}
-			certificates = append(certificates, sni.Certificates{
-				Certificate: cert,
-				Key:         key,
-			})
+			leDomains = append(leDomains, domain)
 		}
-
 	}
+
+	cert, key, err := requestLetsEncryptCertificate(leDomains)
+	if err != nil {
+		log.Fatalf("ERROR: Unable to get certificate: %s", err)
+	}
+	certificates = append(certificates, sni.Certificates{
+		Certificate: cert,
+		Key:         key,
+	})
 
 	go func(proxy *dockerProxy, certificates []sni.Certificates) {
 		httpsServer := &http.Server{

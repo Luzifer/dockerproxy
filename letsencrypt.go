@@ -6,7 +6,6 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"fmt"
-	"log"
 
 	"github.com/ericchiang/letsencrypt"
 )
@@ -15,7 +14,7 @@ var supportedChallenges = []string{
 	letsencrypt.ChallengeHTTP,
 }
 
-func requestLetsEncryptCertificate(domain string) (*x509.Certificate, *rsa.PrivateKey, error) {
+func requestLetsEncryptCertificate(domains []string) (*x509.Certificate, *rsa.PrivateKey, error) {
 	cli, err := letsencrypt.NewClient(cfg.LetsEncryptServer)
 	if err != nil {
 		return nil, nil, err
@@ -29,45 +28,45 @@ func requestLetsEncryptCertificate(domain string) (*x509.Certificate, *rsa.Priva
 		return nil, nil, err
 	}
 
-	// ask for a set of challenges for a given domain
-	auth, _, err := cli.NewAuthorization(accountKey, "dns", domain)
-	if err != nil {
-		return nil, nil, err
-	}
-	chals := auth.Combinations(supportedChallenges...)
-	if len(chals) == 0 {
-		return nil, nil, fmt.Errorf("no supported challenge combinations")
+	for _, domain := range domains {
+		// ask for a set of challenges for a given domain
+		auth, _, err := cli.NewAuthorization(accountKey, "dns", domain)
+		if err != nil {
+			return nil, nil, err
+		}
+		chals := auth.Combinations(supportedChallenges...)
+		if len(chals) == 0 {
+			return nil, nil, fmt.Errorf("no supported challenge combinations")
+		}
+
+		// HTTP Challenge handling
+		chal := chals[0][0]
+		if chal.Type != letsencrypt.ChallengeHTTP {
+			return nil, nil, fmt.Errorf("Did not find a HTTP challenge")
+		}
+
+		path, resource, err := chal.HTTP(accountKey)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		letsEncryptChallenges[domain] = struct {
+			Path     string
+			Response string
+		}{
+			Path:     path,
+			Response: resource,
+		}
+
+		// Tell the server the challenge is ready and poll the server for updates.
+		if err := cli.ChallengeReady(accountKey, chal); err != nil {
+			// oh no, you failed the challenge
+			return nil, nil, err
+		}
+		// The challenge has been verified!
 	}
 
-	// HTTP Challenge handling
-	chal := chals[0][0]
-	if chal.Type != letsencrypt.ChallengeHTTP {
-		return nil, nil, fmt.Errorf("this isn't an HTTP challenge!")
-	}
-
-	path, resource, err := chal.HTTP(accountKey)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	letsEncryptChallenges[domain] = struct {
-		Path     string
-		Response string
-	}{
-		Path:     path,
-		Response: resource,
-	}
-
-	log.Printf("Setting challenge for %s to %s = '%s'", domain, path, resource)
-
-	// Tell the server the challenge is ready and poll the server for updates.
-	if err := cli.ChallengeReady(accountKey, chal); err != nil {
-		// oh no, you failed the challenge
-		return nil, nil, err
-	}
-	// The challenge has been verified!
-
-	csr, certKey, err := newCSR(domain)
+	csr, certKey, err := newCSR(domains)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -78,7 +77,7 @@ func requestLetsEncryptCertificate(domain string) (*x509.Certificate, *rsa.Priva
 
 }
 
-func newCSR(domain string) (*x509.CertificateRequest, *rsa.PrivateKey, error) {
+func newCSR(domains []string) (*x509.CertificateRequest, *rsa.PrivateKey, error) {
 	certKey, err := rsa.GenerateKey(rand.Reader, 4096)
 	if err != nil {
 		return nil, nil, err
@@ -87,8 +86,8 @@ func newCSR(domain string) (*x509.CertificateRequest, *rsa.PrivateKey, error) {
 		SignatureAlgorithm: x509.SHA256WithRSA,
 		PublicKeyAlgorithm: x509.RSA,
 		PublicKey:          &certKey.PublicKey,
-		Subject:            pkix.Name{CommonName: domain},
-		DNSNames:           []string{domain},
+		Subject:            pkix.Name{CommonName: domains[0]},
+		DNSNames:           domains,
 	}
 	csrDER, err := x509.CreateCertificateRequest(rand.Reader, template, certKey)
 	if err != nil {
