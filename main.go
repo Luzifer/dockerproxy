@@ -12,28 +12,25 @@ import (
 )
 
 var (
+	cfg = struct {
+		ConfigFile string `flag:"configfile" default:"./config.json" description:"Location of the configuration file"`
+	}{}
+
 	containers         *dockerContainers
-	cfg                *config
 	proxyConfiguration *proxyConfig
 )
 
 func init() {
 	var err error
 
-	cfg = struct {
-		ConfigFile string `flag:"configfile" default:"./config.json" description:"Location of the configuration file"`
-	}{}
+	if err := rconfig.Parse(&cfg); err != nil {
+		log.Fatalf("Unable to parse commandline flags: %s", err)
+	}
 
 	proxyConfiguration, err = newProxyConfig(cfg.ConfigFile)
 	if err != nil {
 		fmt.Printf("%v\n", err)
 		os.Exit(1)
-	}
-}
-
-func init() {
-	if err := rconfig.Parse(&cfg); err != nil {
-		log.Fatalf("Unable to parse commandline flags: %s", err)
 	}
 }
 
