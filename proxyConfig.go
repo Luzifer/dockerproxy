@@ -21,6 +21,7 @@ type domainConfig struct {
 	Slug           string     `json:"slug" yaml:"slug"`
 	ForceSSL       bool       `json:"force_ssl" yaml:"force_ssl"`
 	Authentication domainAuth `json:"authentication,omitempty" yaml:"authentication,omitempty"`
+	UseLetsEncrypt bool       `json:"letsencrypt" yaml:"letsencrypt"`
 }
 
 type domainAuth struct {
