@@ -53,14 +53,16 @@ func startSSLServer(proxy *dockerProxy, serverErrorChan chan error) {
 		}
 	}
 
-	cert, key, err := leClient.FetchMultiDomainCertificate(leDomains)
-	if err != nil {
-		log.Fatalf("ERROR: Unable to get certificate: %s", err)
+	if len(leDomains) > 0 {
+		cert, key, err := leClient.FetchMultiDomainCertificate(leDomains)
+		if err != nil {
+			log.Fatalf("ERROR: Unable to get certificate: %s", err)
+		}
+		certificates = append(certificates, sni.Certificates{
+			Certificate: cert,
+			Key:         key,
+		})
 	}
-	certificates = append(certificates, sni.Certificates{
-		Certificate: cert,
-		Key:         key,
-	})
 
 	go func(proxy *dockerProxy, certificates []sni.Certificates) {
 		httpsServer := &http.Server{
