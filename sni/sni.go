@@ -8,7 +8,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
-	"log"
 	"net"
 	"net/http"
 
@@ -59,8 +58,6 @@ func (s *SNIServer) ListenAndServeTLSSNI(srv *http.Server, certs []Certificates)
 				certPEM = append(certPEM, pem.EncodeToMemory(&pem.Block{Bytes: v.Intermediate.Raw, Type: "CERTIFICATE"})...)
 			}
 
-			log.Printf("CERT: \n%s", string(certPEM))
-
 			config.Certificates[i], err = tls.X509KeyPair(
 				certPEM,
 				pem.EncodeToMemory(&pem.Block{Bytes: x509.MarshalPKCS1PrivateKey(v.Key), Type: "RSA PRIVATE KEY"}),
@@ -78,8 +75,30 @@ func (s *SNIServer) ListenAndServeTLSSNI(srv *http.Server, certs []Certificates)
 
 	config.BuildNameToCertificate()
 
+	// ++++ SSL security settings
+
 	// Force clients to use TLS1.0 as SSL is buggy as hell
 	config.MinVersion = tls.VersionTLS10
+
+	// Force TLS negotiation to pick a result from the (presumably) stronger list of server-specified ciphers
+	config.PreferServerCipherSuites = true
+
+	// Pick secure cipher suites
+	config.CipherSuites = []uint16{
+		// 256bit
+		tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+		tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+		tls.TLS_RSA_WITH_AES_256_CBC_SHA,
+		// 128bit
+		tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+		tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+		tls.TLS_RSA_WITH_AES_128_CBC_SHA,
+		// 112bit
+		tls.TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
+		tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA,
+	}
+
+	// ++++ End SSL security settings
 
 	conn, err := net.Listen("tcp", addr)
 	if err != nil {
