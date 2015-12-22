@@ -7,6 +7,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/gob"
+	"encoding/pem"
 	"fmt"
 	"log"
 	"os"
@@ -241,4 +242,13 @@ func (l *letsEncryptClient) createMultiDomainCSR(domains []string) (*x509.Certif
 		return nil, nil, err
 	}
 	return csr, certKey, nil
+}
+
+func (l *letsEncryptClient) GetIntermediateCertificate() (*x509.Certificate, error) {
+	crtData, err := Asset("assets/lets-encrypt-x1-cross-signed.pem")
+	if err != nil {
+		return nil, err
+	}
+	b, _ := pem.Decode(crtData)
+	return x509.ParseCertificate(b.Bytes)
 }

@@ -8,6 +8,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
+	"log"
 	"net"
 	"net/http"
 
@@ -19,8 +20,9 @@ type Certificates struct {
 	CertFile string
 	KeyFile  string
 
-	Certificate *x509.Certificate
-	Key         *rsa.PrivateKey
+	Certificate  *x509.Certificate
+	Key          *rsa.PrivateKey
+	Intermediate *x509.Certificate
 }
 
 type SNIServer struct {
@@ -51,8 +53,16 @@ func (s *SNIServer) ListenAndServeTLSSNI(srv *http.Server, certs []Certificates)
 	config.Certificates = make([]tls.Certificate, len(certs))
 	for i, v := range certs {
 		if v.Certificate != nil {
+			certPEM := pem.EncodeToMemory(&pem.Block{Bytes: v.Certificate.Raw, Type: "CERTIFICATE"})
+			if v.Intermediate != nil {
+				certPEM = append(certPEM, '\n')
+				certPEM = append(certPEM, pem.EncodeToMemory(&pem.Block{Bytes: v.Intermediate.Raw, Type: "CERTIFICATE"})...)
+			}
+
+			log.Printf("CERT: \n%s", string(certPEM))
+
 			config.Certificates[i], err = tls.X509KeyPair(
-				pem.EncodeToMemory(&pem.Block{Bytes: v.Certificate.Raw, Type: "CERTIFICATE"}),
+				certPEM,
 				pem.EncodeToMemory(&pem.Block{Bytes: x509.MarshalPKCS1PrivateKey(v.Key), Type: "RSA PRIVATE KEY"}),
 			)
 			if err != nil {

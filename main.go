@@ -1,5 +1,7 @@
 package main
 
+//go:generate make bindata
+
 import (
 	"io"
 	"log"
@@ -58,9 +60,14 @@ func startSSLServer(proxy *dockerProxy, serverErrorChan chan error) {
 		if err != nil {
 			log.Fatalf("ERROR: Unable to get certificate: %s", err)
 		}
+		intermediate, err := leClient.GetIntermediateCertificate()
+		if err != nil {
+			log.Fatalf("ERROR: Unable to get intermediate certificate: %s", err)
+		}
 		certificates = append(certificates, sni.Certificates{
-			Certificate: cert,
-			Key:         key,
+			Certificate:  cert,
+			Key:          key,
+			Intermediate: intermediate,
 		})
 	}
 
