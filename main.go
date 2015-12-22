@@ -1,11 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/Luzifer/dockerproxy/sni"
@@ -17,13 +15,10 @@ var (
 		ConfigFile        string `flag:"configfile" default:"./config.json" description:"Location of the configuration file"`
 		LetsEncryptServer string `flag:"letsencrypt-server" default:"https://acme-v01.api.letsencrypt.org/directory" description:"ACME directory endpoint"`
 	}{}
-	letsEncryptChallenges = map[string]struct {
-		Path     string
-		Response string
-	}{}
 
 	containers         *dockerContainers
 	proxyConfiguration *proxyConfig
+	leClient           *letsEncryptClient
 )
 
 func init() {
@@ -35,8 +30,12 @@ func init() {
 
 	proxyConfiguration, err = newProxyConfig(cfg.ConfigFile)
 	if err != nil {
-		fmt.Printf("%v\n", err)
-		os.Exit(1)
+		log.Fatalf("Unable to parse configuration: %s", err)
+	}
+
+	leClient, err = newLetsEncryptClient(cfg.LetsEncryptServer)
+	if err != nil {
+		log.Fatalf("Unable to create LetsEncrypt client: %s", err)
 	}
 }
 
@@ -48,8 +47,9 @@ func main() {
 	loaderChan := time.NewTicker(time.Minute)
 
 	letsEncryptHandler := http.HandlerFunc(func(res http.ResponseWriter, r *http.Request) {
-		if challenge, ok := letsEncryptChallenges[r.Host]; ok {
+		if challenge, ok := leClient.Challenges[r.Host]; ok {
 			if r.URL.RequestURI() == challenge.Path {
+				log.Printf("Got challenge request for domain %s and answered.", r.Host)
 				io.WriteString(res, challenge.Response)
 				return
 			}
@@ -73,7 +73,7 @@ func main() {
 		}
 	}
 
-	cert, key, err := requestLetsEncryptCertificate(leDomains)
+	cert, key, err := leClient.FetchMultiDomainCertificate(leDomains)
 	if err != nil {
 		log.Fatalf("ERROR: Unable to get certificate: %s", err)
 	}
