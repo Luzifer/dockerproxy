@@ -22,6 +22,15 @@
 			"Rev": "c0187cbf588c59709e8881fd2bba082b02231356"
 		},
 		{
+			"ImportPath": "github.com/hydrogen18/stoppableListener",
+			"Rev": "dadc9ccc400c712e5a316107a5c462863919e579"
+		},
+		{
+			"ImportPath": "github.com/robfig/cron",
+			"Comment": "v1-2-g67823cd",
+			"Rev": "67823cd24dece1b04cced3a0a0b3ca2bc84d875e"
+		},
+		{
 			"ImportPath": "github.com/spf13/pflag",
 			"Rev": "b084184666e02084b8ccb9b704bf0d79c466eb1d"
 		},

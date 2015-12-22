@@ -10,6 +10,8 @@ import (
 	"encoding/pem"
 	"net"
 	"net/http"
+
+	"github.com/hydrogen18/stoppableListener"
 )
 
 // Certificates is a representation of a certificate and a key
@@ -21,9 +23,17 @@ type Certificates struct {
 	Key         *rsa.PrivateKey
 }
 
+type SNIServer struct {
+	listener *stoppableListener.StoppableListener
+}
+
+func (s *SNIServer) Stop() {
+	s.listener.Stop()
+}
+
 // ListenAndServeTLSSNI openes a http listener with SNI certificate selection
 // from the Certificates collection
-func ListenAndServeTLSSNI(srv *http.Server, certs []Certificates) error {
+func (s *SNIServer) ListenAndServeTLSSNI(srv *http.Server, certs []Certificates) error {
 	addr := srv.Addr
 	if addr == "" {
 		addr = ":https"
@@ -58,14 +68,19 @@ func ListenAndServeTLSSNI(srv *http.Server, certs []Certificates) error {
 
 	config.BuildNameToCertificate()
 
+	// Force clients to use TLS1.0 as SSL is buggy as hell
+	config.MinVersion = tls.VersionTLS10
+
 	conn, err := net.Listen("tcp", addr)
 	if err != nil {
 		return err
 	}
 
-	// Force clients to use TLS1.0 as SSL is buggy as hell
-	config.MinVersion = tls.VersionTLS10
+	s.listener, err = stoppableListener.New(conn)
+	if err != nil {
+		return err
+	}
 
-	tlsListener := tls.NewListener(conn, config)
+	tlsListener := tls.NewListener(s.listener, config)
 	return srv.Serve(tlsListener)
 }

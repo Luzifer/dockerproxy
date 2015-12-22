@@ -4,10 +4,11 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/Luzifer/dockerproxy/sni"
 	"github.com/Luzifer/rconfig"
+	"github.com/hydrogen18/stoppableListener"
+	"github.com/robfig/cron"
 )
 
 var (
@@ -19,6 +20,7 @@ var (
 	containers         *dockerContainers
 	proxyConfiguration *proxyConfig
 	leClient           *letsEncryptClient
+	sniServer          = sni.SNIServer{}
 )
 
 func init() {
@@ -39,29 +41,7 @@ func init() {
 	}
 }
 
-func main() {
-	containers = collectDockerContainer()
-	proxy := newDockerProxy()
-
-	serverErrorChan := make(chan error, 2)
-	loaderChan := time.NewTicker(time.Minute)
-
-	letsEncryptHandler := http.HandlerFunc(func(res http.ResponseWriter, r *http.Request) {
-		if challenge, ok := leClient.Challenges[r.Host]; ok {
-			if r.URL.RequestURI() == challenge.Path {
-				log.Printf("Got challenge request for domain %s and answered.", r.Host)
-				io.WriteString(res, challenge.Response)
-				return
-			}
-		}
-
-		proxy.ServeHTTP(res, r)
-	})
-
-	go func(h http.Handler) {
-		serverErrorChan <- http.ListenAndServe(proxyConfiguration.ListenHTTP, h)
-	}(letsEncryptHandler)
-
+func startSSLServer(proxy *dockerProxy, serverErrorChan chan error) {
 	// Collect certificates from disk
 	certificates := proxy.getCertificates()
 
@@ -88,21 +68,65 @@ func main() {
 			Addr:    proxyConfiguration.ListenHTTPS,
 		}
 
-		serverErrorChan <- sni.ListenAndServeTLSSNI(httpsServer, certificates)
+		serverErrorChan <- sniServer.ListenAndServeTLSSNI(httpsServer, certificates)
 	}(proxy, certificates)
+}
+
+func startHTTPServer(proxy *dockerProxy, serverErrorChan chan error) {
+	letsEncryptHandler := http.HandlerFunc(func(res http.ResponseWriter, r *http.Request) {
+		if challenge, ok := leClient.Challenges[r.Host]; ok {
+			if r.URL.RequestURI() == challenge.Path {
+				log.Printf("Got challenge request for domain %s and answered.", r.Host)
+				io.WriteString(res, challenge.Response)
+				return
+			}
+		}
+
+		proxy.ServeHTTP(res, r)
+	})
+
+	go func(h http.Handler) {
+		serverErrorChan <- http.ListenAndServe(proxyConfiguration.ListenHTTP, h)
+	}(letsEncryptHandler)
+}
+
+func reloadConfiguration() {
+	tmp, err := newProxyConfig(cfg.ConfigFile)
+	if err == nil {
+		proxyConfiguration = tmp
+	} else {
+		log.Printf("%v\n", err)
+	}
+	containers = collectDockerContainer()
+}
+
+func main() {
+	containers = collectDockerContainer()
+	proxy := newDockerProxy()
+
+	c := cron.New()
+	c.AddFunc("@every 1m", reloadConfiguration)
+	c.AddFunc("@every 720h", func() {
+		// Stop the SNI server every 30d, it will get restarted and
+		// the LetsEncrypt certificates are checked for expiry
+		sniServer.Stop()
+	})
+	c.Start()
+
+	serverErrorChan := make(chan error, 2)
+
+	startHTTPServer(proxy, serverErrorChan)
+	startSSLServer(proxy, serverErrorChan)
 
 	for {
 		select {
 		case err := <-serverErrorChan:
-			log.Fatal(err)
-		case <-loaderChan.C:
-			tmp, err := newProxyConfig(cfg.ConfigFile)
-			if err == nil {
-				proxyConfiguration = tmp
+			if err != stoppableListener.StoppedError {
+				log.Fatal(err)
 			} else {
-				log.Printf("%v\n", err)
+				// Something made the SNI server stop, we just restart it
+				startSSLServer(proxy, serverErrorChan)
 			}
-			containers = collectDockerContainer()
 		}
 	}
 }
