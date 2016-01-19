@@ -26,6 +26,10 @@ var (
 	}
 )
 
+const (
+	renewTimeLeft = 60 * 24 * time.Hour
+)
+
 func init() {
 	gob.Register(letsEncryptClientCache{})
 	gob.Register(rsa.PrivateKey{})
@@ -183,7 +187,7 @@ func (l *letsEncryptClient) hashMultiDomain(domains []string) string {
 
 func (l *letsEncryptClient) FetchMultiDomainCertificate(domains []string) (*x509.Certificate, *rsa.PrivateKey, error) {
 	domainHash := l.hashMultiDomain(domains)
-	if cert, ok := l.cache.Certificates[domainHash]; ok && cert.Certificate.NotAfter.Sub(time.Now()) > 30*24*time.Hour {
+	if cert, ok := l.cache.Certificates[domainHash]; ok && cert.Certificate.NotAfter.Sub(time.Now()) > renewTimeLeft {
 		log.Printf("Using cached certificate for domains %s", strings.Join(domains, ", "))
 		return cert.Certificate, cert.Key, nil
 	}
