@@ -1,6 +1,6 @@
 {
 	"ImportPath": "github.com/Luzifer/dockerproxy",
-	"GoVersion": "go1.5.1",
+	"GoVersion": "go1.5.3",
 	"Deps": [
 		{
 			"ImportPath": "github.com/Luzifer/rconfig",
@@ -13,13 +13,30 @@
 			"Rev": "aedaad751e7676772297daf9ddb3b3234cee0e0d"
 		},
 		{
+			"ImportPath": "github.com/ericchiang/letsencrypt",
+			"Rev": "c926fda78cdc6f12e7fa0480672dc9ac36bc797d"
+		},
+		{
 			"ImportPath": "github.com/fsouza/go-dockerclient",
 			"Comment": "0.2.1-667-gc0187cb",
 			"Rev": "c0187cbf588c59709e8881fd2bba082b02231356"
 		},
 		{
+			"ImportPath": "github.com/hydrogen18/stoppableListener",
+			"Rev": "dadc9ccc400c712e5a316107a5c462863919e579"
+		},
+		{
+			"ImportPath": "github.com/robfig/cron",
+			"Comment": "v1-2-g67823cd",
+			"Rev": "67823cd24dece1b04cced3a0a0b3ca2bc84d875e"
+		},
+		{
 			"ImportPath": "github.com/spf13/pflag",
 			"Rev": "b084184666e02084b8ccb9b704bf0d79c466eb1d"
+		},
+		{
+			"ImportPath": "github.com/square/go-jose",
+			"Rev": "37934a899dd03635373fd1e143936d32cfe48d31"
 		},
 		{
 			"ImportPath": "gopkg.in/yaml.v2",
