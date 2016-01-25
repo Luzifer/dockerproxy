@@ -25,6 +25,7 @@ The configuration is written in YAML (or JSON) format and read every minute by t
   - `ssl` (optional): SSL configuration for that domain
     - `cert`: x509 certificate file (Intermediate certificates belongs in this file too. Put them under your own certificate.)
     - `key`: The key for the cerficate without password protection
+  - `letsencrypt`: Enable fetching the certificate from [LetsEncrypt](https://letsencrypt.org/)
   - `authentication`: Configure authentication for this domain
     - `type`: The authentication mechanism to use (Available: `basic-auth`)
     - `config`: Authentication specific configuration
@@ -57,6 +58,10 @@ domains:
       config:
         alice: cat
         bob: password
+  letsencrypt.example.com:
+    slug: container1
+    force_ssl: true
+    letsencrypt: true
 
 docker:
   hosts:
