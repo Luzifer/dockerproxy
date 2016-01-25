@@ -27,7 +27,7 @@ var (
 )
 
 const (
-	renewTimeLeft = 60 * 24 * time.Hour
+	renewTimeLeft = 30 * 24 * time.Hour
 )
 
 func init() {
