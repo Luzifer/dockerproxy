@@ -249,7 +249,7 @@ func (l *letsEncryptClient) createMultiDomainCSR(domains []string) (*x509.Certif
 }
 
 func (l *letsEncryptClient) GetIntermediateCertificate() (*x509.Certificate, error) {
-	crtData, err := Asset("assets/lets-encrypt-x1-cross-signed.pem")
+	crtData, err := Asset("assets/lets-encrypt-x3-cross-signed.pem")
 	if err != nil {
 		return nil, err
 	}
