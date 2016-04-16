@@ -21,6 +21,13 @@ func collectDockerContainer() *dockerContainers {
 		for _, apiContainer := range containers {
 			container, _ := client.InspectContainer(apiContainer.ID)
 
+			// Load slug and port from container labels
+			if routerSlug, ok := container.Config.Labels["io.luzifer.dockerproxy.slug"]; ok {
+				routerPort := container.Config.Labels["io.luzifer.dockerproxy.port"]
+				result[routerSlug] = append(result[routerSlug], fmt.Sprintf("%s:%s", dockerHost, routerPort))
+				continue // If new configuration is present don't parse env configuration
+			}
+
 			// Load ROUTER_SLUG and ROUTER_PORT from environment configuration of that container
 			currentEnv := make(map[string]string)
 			for _, envVar := range container.Config.Env {
