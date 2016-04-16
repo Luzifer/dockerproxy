@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/Luzifer/dockerproxy/sni"
 	"github.com/Luzifer/rconfig"
@@ -43,6 +44,23 @@ func init() {
 	}
 }
 
+func createDomainMap(domains []string) map[string][]string {
+	result := make(map[string][]string)
+
+	for _, domain := range domains {
+		parts := strings.Split(domain, ".")
+		if len(parts) < 2 {
+			// This isn't a domain
+			continue
+		}
+
+		secondLevel := strings.Join(parts[len(parts)-2:], ".")
+		result[secondLevel] = append(result[secondLevel], domain)
+	}
+
+	return result
+}
+
 func startSSLServer(proxy *dockerProxy, serverErrorChan chan error) {
 	// Collect certificates from disk
 	certificates := proxy.getCertificates()
@@ -55,20 +73,24 @@ func startSSLServer(proxy *dockerProxy, serverErrorChan chan error) {
 		}
 	}
 
-	if len(leDomains) > 0 {
-		cert, key, err := leClient.FetchMultiDomainCertificate(leDomains)
-		if err != nil {
-			log.Fatalf("ERROR: Unable to get certificate: %s", err)
+	domainMap := createDomainMap(leDomains)
+
+	if len(domainMap) > 0 {
+		for _, leDomains := range domainMap {
+			cert, key, err := leClient.FetchMultiDomainCertificate(leDomains)
+			if err != nil {
+				log.Fatalf("ERROR: Unable to get certificate: %s", err)
+			}
+			intermediate, err := leClient.GetIntermediateCertificate()
+			if err != nil {
+				log.Fatalf("ERROR: Unable to get intermediate certificate: %s", err)
+			}
+			certificates = append(certificates, sni.Certificates{
+				Certificate:  cert,
+				Key:          key,
+				Intermediate: intermediate,
+			})
 		}
-		intermediate, err := leClient.GetIntermediateCertificate()
-		if err != nil {
-			log.Fatalf("ERROR: Unable to get intermediate certificate: %s", err)
-		}
-		certificates = append(certificates, sni.Certificates{
-			Certificate:  cert,
-			Key:          key,
-			Intermediate: intermediate,
-		})
 	}
 
 	go func(proxy *dockerProxy, certificates []sni.Certificates) {
