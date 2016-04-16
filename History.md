@@ -1,4 +1,9 @@
 
+1.11.0 / 2016-04-16
+==================
+
+  * Added support for new container label configuration
+
 1.10.0 / 2016-04-16
 ==================
 
