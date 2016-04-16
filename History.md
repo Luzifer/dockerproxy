@@ -1,4 +1,10 @@
 
+1.10.0 / 2016-04-16
+==================
+
+  * Use second level domain as CN
+  * Fetch one certificate per second level domain
+
 1.9.2 / 2016-03-27
 ==================
 
