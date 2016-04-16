@@ -57,7 +57,11 @@ func createDomainMap(domains []string) map[string][]string {
 
 		secondLevel := strings.Join(parts[len(parts)-2:], ".")
 		if _, ok := result[secondLevel]; !ok {
-			result[secondLevel] = []string{secondLevel}
+			if helpers.StringInSlice(secondLevel, domains) {
+				result[secondLevel] = []string{secondLevel}
+			} else {
+				result[secondLevel] = []string{domain}
+			}
 		}
 		result[secondLevel] = helpers.AppendIfMissing(result[secondLevel], domain)
 	}
