@@ -1,4 +1,4 @@
-package helpers
+package str
 
 // AppendIfMissing adds a string to a slice when it's not present yet
 func AppendIfMissing(slice []string, s string) []string {

@@ -1,11 +1,12 @@
 {
 	"ImportPath": "github.com/Luzifer/dockerproxy",
 	"GoVersion": "go1.6",
-	"GodepVersion": "v60",
+	"GodepVersion": "v62",
 	"Deps": [
 		{
-			"ImportPath": "github.com/Luzifer/go_helpers",
-			"Rev": "1626fb35db7af5d3db770f95b3b9429f0ac198f6"
+			"ImportPath": "github.com/Luzifer/go_helpers/str",
+			"Comment": "v1.0.0",
+			"Rev": "e7ac9d43bc539eddf4d880762a564b065b2e9f95"
 		},
 		{
 			"ImportPath": "github.com/Luzifer/rconfig",

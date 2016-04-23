@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/Luzifer/dockerproxy/sni"
-	"github.com/Luzifer/go_helpers"
+	"github.com/Luzifer/go_helpers/str"
 	"github.com/Luzifer/rconfig"
 	"github.com/hydrogen18/stoppableListener"
 	"github.com/robfig/cron"
@@ -57,13 +57,13 @@ func createDomainMap(domains []string) map[string][]string {
 
 		secondLevel := strings.Join(parts[len(parts)-2:], ".")
 		if _, ok := result[secondLevel]; !ok {
-			if helpers.StringInSlice(secondLevel, domains) {
+			if str.StringInSlice(secondLevel, domains) {
 				result[secondLevel] = []string{secondLevel}
 			} else {
 				result[secondLevel] = []string{domain}
 			}
 		}
-		result[secondLevel] = helpers.AppendIfMissing(result[secondLevel], domain)
+		result[secondLevel] = str.AppendIfMissing(result[secondLevel], domain)
 	}
 
 	return result
