@@ -11,7 +11,9 @@ import (
 	"github.com/Luzifer/dockerproxy/sni"
 	"github.com/Luzifer/go_helpers/str"
 	"github.com/Luzifer/rconfig"
+	"github.com/gorilla/mux"
 	"github.com/hydrogen18/stoppableListener"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/robfig/cron"
 )
 
@@ -25,7 +27,37 @@ var (
 	proxyConfiguration *proxyConfig
 	leClient           *letsEncryptClient
 	sniServer          = sni.SNIServer{}
+
+	requestCount    *prometheus.CounterVec
+	requestDuration prometheus.Summary
+	responseSize    prometheus.Summary
 )
+
+func initMetrics() {
+	so := prometheus.SummaryOpts{
+		Subsystem:   "http",
+		ConstLabels: prometheus.Labels{"handler": "dockerproxy"},
+	}
+
+	reqCnt := prometheus.NewCounterVec(prometheus.CounterOpts{
+		Subsystem:   so.Subsystem,
+		Name:        "requests_total",
+		Help:        "Total number of HTTP requests made.",
+		ConstLabels: so.ConstLabels,
+	}, []string{"method", "code"})
+
+	so.Name = "response_size_bytes"
+	so.Help = "The HTTP response sizes in bytes."
+	resSz := prometheus.NewSummary(so)
+
+	so.Name = "request_duration_microseconds"
+	so.Help = "The HTTP request latencies in microseconds."
+	reqDur := prometheus.NewSummary(so)
+
+	requestCount = prometheus.MustRegisterOrGet(reqCnt).(*prometheus.CounterVec)
+	requestDuration = prometheus.MustRegisterOrGet(reqDur).(prometheus.Summary)
+	responseSize = prometheus.MustRegisterOrGet(resSz).(prometheus.Summary)
+}
 
 func init() {
 	var err error
@@ -43,6 +75,8 @@ func init() {
 	if err != nil {
 		log.Fatalf("Unable to create LetsEncrypt client: %s", err)
 	}
+
+	initMetrics()
 }
 
 func createDomainMap(domains []string) map[string][]string {
@@ -116,6 +150,7 @@ func startHTTPServer(proxy *dockerProxy, serverErrorChan chan error) {
 		if challenge, ok := leClient.Challenges[r.Host]; ok {
 			if r.URL.RequestURI() == challenge.Path {
 				log.Printf("Got challenge request for domain %s and answered.", r.Host)
+				requestCount.WithLabelValues("acme", "200").Inc()
 				io.WriteString(res, challenge.Response)
 				return
 			}
@@ -123,6 +158,7 @@ func startHTTPServer(proxy *dockerProxy, serverErrorChan chan error) {
 
 		// If we see unanswered acme challenges reject them instead redirecting them to the application
 		if strings.Contains(r.URL.RequestURI(), ".well-known/acme-challenge") {
+			requestCount.WithLabelValues("acme", "404").Inc()
 			http.Error(res, "Invalid acme-challenge", http.StatusNotFound)
 			return
 		}
@@ -133,6 +169,15 @@ func startHTTPServer(proxy *dockerProxy, serverErrorChan chan error) {
 	go func(h http.Handler) {
 		serverErrorChan <- http.ListenAndServe(proxyConfiguration.ListenHTTP, h)
 	}(letsEncryptHandler)
+}
+
+func startMetricsServer(serverErrorChan chan error) {
+	r := mux.NewRouter()
+	r.Handle("/metrics", prometheus.Handler())
+
+	go func(h http.Handler) {
+		serverErrorChan <- http.ListenAndServe(proxyConfiguration.ListenMetrics, h)
+	}(r)
 }
 
 func reloadConfiguration() {
@@ -162,6 +207,7 @@ func main() {
 
 	startHTTPServer(proxy, serverErrorChan)
 	startSSLServer(proxy, serverErrorChan)
+	startMetricsServer(serverErrorChan)
 
 	for {
 		select {

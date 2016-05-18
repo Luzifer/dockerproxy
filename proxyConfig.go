@@ -9,11 +9,12 @@ import (
 )
 
 type proxyConfig struct {
-	Domains     map[string]domainConfig `json:"domains" yaml:"domains"`
-	Generic     string                  `json:"generic" yaml:"generic"`
-	Docker      dockerConfig            `json:"docker" yaml:"docker"`
-	ListenHTTP  string                  `json:"listenHTTP" yaml:"listenHTTP"`
-	ListenHTTPS string                  `json:"listenHTTPS" yaml:"listenHTTPS"`
+	Domains       map[string]domainConfig `json:"domains" yaml:"domains"`
+	Generic       string                  `json:"generic" yaml:"generic"`
+	Docker        dockerConfig            `json:"docker" yaml:"docker"`
+	ListenHTTP    string                  `json:"listenHTTP" yaml:"listenHTTP"`
+	ListenHTTPS   string                  `json:"listenHTTPS" yaml:"listenHTTPS"`
+	ListenMetrics string                  `json:"listenMetrics" yaml:"listenMetrics"`
 }
 
 type domainConfig struct {
@@ -40,7 +41,9 @@ type dockerConfig struct {
 }
 
 func newProxyConfig(configFile string) (*proxyConfig, error) {
-	tmp := proxyConfig{}
+	tmp := proxyConfig{
+		ListenMetrics: "127.0.0.1:9000",
+	}
 
 	configBody, err := ioutil.ReadFile(configFile)
 	if err != nil {

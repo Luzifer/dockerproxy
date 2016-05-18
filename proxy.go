@@ -4,10 +4,12 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/Luzifer/dockerproxy/sni"
+	"github.com/Luzifer/go_helpers/accessLogger"
 	"github.com/elazarl/goproxy"
 
 	"github.com/Luzifer/dockerproxy/auth"
@@ -84,8 +86,26 @@ func (d *dockerProxy) normalizeRemoteAddr(remoteAddress string) string {
 
 func (d *dockerProxy) httpLog(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("%s %s %s %s", d.normalizeRemoteAddr(r.RemoteAddr), r.Method, r.Host, r.URL)
-		handler.ServeHTTP(w, r)
+		al := accessLogger.New(w)
+
+		start := time.Now()
+		handler.ServeHTTP(al, r)
+		duration := float64(time.Since(start)) / float64(time.Microsecond)
+
+		requestCount.WithLabelValues(
+			strings.ToLower(r.Method),
+			strconv.FormatInt(int64(al.StatusCode), 10),
+		).Inc()
+		responseSize.Observe(float64(al.Size))
+		requestDuration.Observe(duration)
+
+		log.Printf("%s %s \"%s %s\" %d %d \"%s\"",
+			d.normalizeRemoteAddr(r.RemoteAddr),
+			r.Host,
+			r.Method, r.URL.RequestURI(),
+			al.StatusCode, al.Size,
+			r.Header.Get("User-Agent"),
+		)
 	})
 }
 
