@@ -135,7 +135,7 @@ func startSSLServer(proxy *dockerProxy, serverErrorChan chan error) {
 		}
 	}
 
-	go func(proxy *dockerProxy, certificates []sni.Certificates) {
+	go func(proxy http.Handler, certificates []sni.Certificates) {
 		httpsServer := &http.Server{
 			Handler: proxy,
 			Addr:    proxyConfiguration.ListenHTTPS,
@@ -209,15 +209,12 @@ func main() {
 	startSSLServer(proxy, serverErrorChan)
 	startMetricsServer(serverErrorChan)
 
-	for {
-		select {
-		case err := <-serverErrorChan:
-			if err != stoppableListener.StoppedError {
-				log.Fatal(err)
-			} else {
-				// Something made the SNI server stop, we just restart it
-				startSSLServer(proxy, serverErrorChan)
-			}
+	for err := range serverErrorChan {
+		if err != stoppableListener.StoppedError {
+			log.Fatal(err)
+		} else {
+			// Something made the SNI server stop, we just restart it
+			startSSLServer(proxy, serverErrorChan)
 		}
 	}
 }
