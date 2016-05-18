@@ -15,8 +15,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ericchiang/letsencrypt/Godeps/_workspace/src/github.com/square/go-jose"
 	"github.com/ericchiang/letsencrypt/internal/base64"
-	"github.com/square/go-jose"
 )
 
 const jwsContentType = "application/jose+jws"
