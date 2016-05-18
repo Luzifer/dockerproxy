@@ -121,6 +121,12 @@ func startHTTPServer(proxy *dockerProxy, serverErrorChan chan error) {
 			}
 		}
 
+		// If we see unanswered acme challenges reject them instead redirecting them to the application
+		if strings.Contains(r.URL.RequestURI(), ".well-known/acme-challenge") {
+			http.Error(res, "Invalid acme-challenge", http.StatusNotFound)
+			return
+		}
+
 		proxy.ServeHTTP(res, r)
 	})
 
