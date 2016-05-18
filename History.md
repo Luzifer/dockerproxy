@@ -1,3 +1,8 @@
+# 1.12.0 / 2016-05-19
+
+  * Fix: Removed some linter warnings
+  * Improved logging, added metrics
+  * Drop unknown acme-challenges instead of routing them
 
 1.11.0 / 2016-04-16
 ==================
