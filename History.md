@@ -1,3 +1,7 @@
+# 1.13.0 / 2016-12-15
+
+  * Push assets to Github
+
 # 1.12.0 / 2016-05-19
 
   * Fix: Removed some linter warnings
@@ -97,4 +101,3 @@
 ==================
 
   * Initial running version
-
