@@ -5,3 +5,6 @@ checkout_dir: /go/src/github.com/Luzifer/dockerproxy
 
 commands:
   - make ci
+
+environment:
+  CGO_ENABLED: 0
