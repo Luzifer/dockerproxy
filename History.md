@@ -1,3 +1,8 @@
+# 1.14.0 / 2016-12-15
+
+  * Switch to homedir lib without CGO requirement
+  * Revert "Fix: Enable CGO"
+
 # 1.13.1 / 2016-12-15
 
   * Fix: Enable CGO
