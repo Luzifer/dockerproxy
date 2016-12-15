@@ -1,3 +1,7 @@
+# 1.13.1 / 2016-12-15
+
+  * Fix: Enable CGO
+
 # 1.13.0 / 2016-12-15
 
   * Push assets to Github
