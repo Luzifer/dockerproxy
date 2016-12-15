@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/ericchiang/letsencrypt"
+	homedir "github.com/mitchellh/go-homedir"
 )
 
 var (
@@ -70,7 +71,12 @@ func newLetsEncryptClient(server string) (*letsEncryptClient, error) {
 		return nil, err
 	}
 
-	cacheFile := path.Join(usr.HomeDir, ".config", "dockerproxy.lecache")
+	homedir, err := homedir.Dir()
+	if err != nil {
+		return nil, err
+	}
+
+	cacheFile := path.Join(homedir, ".config", "dockerproxy.lecache")
 	os.MkdirAll(path.Dir(cacheFile), 0600)
 
 	cache := letsEncryptClientCache{
