@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/user"
 	"path"
 	"sort"
 	"strings"
@@ -66,11 +65,6 @@ type letsEncryptClient struct {
 }
 
 func newLetsEncryptClient(server string) (*letsEncryptClient, error) {
-	usr, err := user.Current()
-	if err != nil {
-		return nil, err
-	}
-
 	homedir, err := homedir.Dir()
 	if err != nil {
 		return nil, err
