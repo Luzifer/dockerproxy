@@ -1,3 +1,7 @@
+# 1.14.1 / 2016-12-15
+
+  * Fix: Remove not longer required code
+
 # 1.14.0 / 2016-12-15
 
   * Switch to homedir lib without CGO requirement
