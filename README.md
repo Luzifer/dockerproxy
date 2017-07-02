@@ -2,6 +2,14 @@
 
 DockerProxy is a small application to shield HTTP exporting [Docker](https://www.docker.com/) containers. The proxy supports SNI to shield the containers with HTTPs certificates. To discover the containers the Docker daemon needs to listen on a tcp port which should be shielded by a firewall to ensure the security of the Docker host.
 
+## Deprecation warning
+
+**Please pay attention:** This project is no longer supported, will get no patches anymore and all issues will get closed silently!
+
+There are some major bugs in this software which will not get fixed. You might want to get over to [nginx-letsencrypt](https://github.com/Luzifer/nginx-letsencrypt) and use a nginx instead of this!
+
+![](https://d2o84fseuhwkxk.cloudfront.net/dockerproxy.svg)
+
 ## Design Flaw
 
 Currently Docker does not support container tagging so this proxy is using the environment variables to detect the "slug" and the port of a container. This can be fixed as soon as there is a tagging concept similar as the EC2 tagging in AWS.
